@@ -1,5 +1,0 @@
-task: T8 hotkey.py tap state machine
-command: python -m pytest tests/test_hotkey.py -q
-
-...........                                                              [100%]
-11 passed in 0.39s

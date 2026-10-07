@@ -1,5 +1,0 @@
-task: T3 config.py tomllib loader + validation
-command: python -m pytest tests/test_config.py -q
-
-.......                                                                  [100%]
-7 passed in 0.42s

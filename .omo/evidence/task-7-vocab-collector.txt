@@ -1,5 +1,0 @@
-task: T7 clipboard.py gate/retry/sanitize
-command: python -m pytest tests/test_clipboard.py -q
-
-................                                                         [100%]
-16 passed in 0.42s

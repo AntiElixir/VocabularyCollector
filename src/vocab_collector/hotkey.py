@@ -16,10 +16,29 @@ from . import clipboard
 _LOG = logging.getLogger(__name__)
 
 VK_C = 0x43
+VK_CONTROL = 0x11
 VK_LCONTROL = 0xA2
 VK_RCONTROL = 0xA3
 
-_CONTROL_VKS = (VK_LCONTROL, VK_RCONTROL)
+#: Generic control is what pynput synthesises for ``Key.ctrl``; the left/right
+#: variants are what the low-level hook reports for physical presses.
+_CONTROL_VKS = (VK_CONTROL, VK_LCONTROL, VK_RCONTROL)
+
+
+def _vk_of(key) -> int | None:
+    """Extract a virtual-key code from a pynput key event.
+
+    Plain keys arrive as :class:`pynput.keyboard.KeyCode`, which exposes ``vk``
+    directly. Special keys (``Key.ctrl``, ...) arrive as :class:`Key` enum
+    members, whose ``vk`` is ``None``; the code lives on ``key.value.vk``.
+    """
+    vk = getattr(key, "vk", None)
+    if vk is not None:
+        return vk
+    value = getattr(key, "value", None)
+    if isinstance(value, int):
+        return value
+    return getattr(value, "vk", None)
 
 
 class Event(Enum):
@@ -133,10 +152,10 @@ class Listener:
             self._on_trigger(self._seq0)
 
     def on_press(self, key) -> None:
-        self._handle(getattr(key, "vk", None), True)
+        self._handle(_vk_of(key), True)
 
     def on_release(self, key) -> None:
-        self._handle(getattr(key, "vk", None), False)
+        self._handle(_vk_of(key), False)
 
     def start(self) -> "Listener":
         from pynput import keyboard

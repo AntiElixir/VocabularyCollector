@@ -1,5 +1,0 @@
-task: T9 logging_setup.py rotating file log
-command: python -m pytest tests/test_logging_setup.py -q
-
-....                                                                     [100%]
-4 passed in 0.44s

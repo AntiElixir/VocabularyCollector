@@ -1,5 +1,0 @@
-task: T2 paths.py portable resolution
-command: python -m pytest tests/test_paths.py -q
-
-....                                                                     [100%]
-4 passed in 0.41s

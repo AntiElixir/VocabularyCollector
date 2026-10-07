@@ -1,5 +1,0 @@
-task: T6 llm.py structured call + fallback
-command: python -m pytest tests/test_llm.py -q
-
-.........                                                                [100%]
-9 passed in 1.26s

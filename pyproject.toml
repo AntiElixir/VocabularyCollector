@@ -25,6 +25,7 @@ build-backend = "uv_build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+addopts = ["-m", "not windows_e2e"]
 markers = [
     "windows_e2e: Windows-only end-to-end tests (require a real desktop session)",
 ]

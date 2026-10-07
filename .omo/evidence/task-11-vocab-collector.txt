@@ -1,5 +1,0 @@
-task: T11 html_export.py escaped atomic HTML
-command: python -m pytest tests/test_html_export.py -q
-
-.....                                                                    [100%]
-5 passed in 0.41s

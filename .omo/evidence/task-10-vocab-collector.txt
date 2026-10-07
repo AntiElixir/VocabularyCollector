@@ -1,5 +1,0 @@
-task: T10 pipeline.py worker + HTML refresh
-command: python -m pytest tests/test_pipeline.py -q
-
-......                                                                   [100%]
-6 passed in 1.54s

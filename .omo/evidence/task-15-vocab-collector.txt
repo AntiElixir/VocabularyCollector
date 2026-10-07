@@ -1,5 +1,0 @@
-task: T15 build hygiene (partial: dist not built)
-command: python -m pytest tests/test_build_hygiene.py -q
-
-.ss                                                                      [100%]
-1 passed, 2 skipped in 0.41s

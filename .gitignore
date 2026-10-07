@@ -6,6 +6,9 @@ data/
 dist/
 build/
 
+# Internal work-plan evidence (not part of the published project)
+.omo/
+
 # Python
 __pycache__/
 *.py[cod]
