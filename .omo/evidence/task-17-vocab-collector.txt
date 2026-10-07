@@ -1,0 +1,15 @@
+task: T17 hermetic Windows capture-to-DB-to-HTML E2E
+status: NOT VERIFIED - blocked by the environment, not by the code.
+
+Deliverable is written and in place: tests/test_e2e_capture.py, tests/e2e_support.py
+
+Blocker:
+  * This sandbox has no network access, so `uv sync` cannot install
+    pynput / pyperclip / pyinstaller (PyPI is unreachable: WinError 10013).
+  * pynput is required to run this test at all, and PyInstaller is required to
+    produce dist/.
+  * The sandbox escalation path (require_escalated) is currently failing with an
+    infrastructure error, so the network request could not be approved.
+
+To verify once dependencies are installed on the Windows host:
+  uv run pytest -m windows_e2e tests/test_e2e_capture.py

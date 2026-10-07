@@ -1,0 +1,6 @@
+offline test run (system Python 3.13, no network)
+
+.ss..................................................................... [ 92%]
+......                                                                   [100%]
+76 passed, 5 skipped in 2.15s
+

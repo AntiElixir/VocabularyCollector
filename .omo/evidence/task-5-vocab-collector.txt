@@ -1,0 +1,5 @@
+task: T5 db.py schema, dedup insert, list
+command: python -m pytest tests/test_db.py -q
+
+....                                                                     [100%]
+4 passed in 0.46s

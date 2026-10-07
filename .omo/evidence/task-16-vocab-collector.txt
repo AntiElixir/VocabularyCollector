@@ -1,0 +1,15 @@
+task: T16 Windows listener smoke test
+status: NOT VERIFIED - blocked by the environment, not by the code.
+
+Deliverable is written and in place: tests/test_listener_smoke.py
+
+Blocker:
+  * This sandbox has no network access, so `uv sync` cannot install
+    pynput / pyperclip / pyinstaller (PyPI is unreachable: WinError 10013).
+  * pynput is required to run this test at all, and PyInstaller is required to
+    produce dist/.
+  * The sandbox escalation path (require_escalated) is currently failing with an
+    infrastructure error, so the network request could not be approved.
+
+To verify once dependencies are installed on the Windows host:
+  uv run pytest -m windows_e2e tests/test_listener_smoke.py

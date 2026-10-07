@@ -1,0 +1,16 @@
+# Copy this file to config/config.toml and replace api_key with your real key.
+# config/config.toml is gitignored and never bundled into the built app.
+
+[llm]
+# SJTU OpenAI-compatible endpoint (verified: json_schema strict -> HTTP 200).
+base_url = "https://models.sjtu.edu.cn/api/v1"
+api_key = "sk-REPLACE_ME"
+model = "deepseek-chat"
+timeout_seconds = 30
+max_retries = 2
+
+[app]
+max_selection_chars = 64
+double_tap_window_ms = 400
+clipboard_wait_ms = 400
+log_level = "INFO"

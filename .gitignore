@@ -1,0 +1,13 @@
+# User-owned configuration (never committed)
+config/config.toml
+
+# Runtime output
+data/
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/

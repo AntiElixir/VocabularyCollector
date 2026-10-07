@@ -1,0 +1,30 @@
+[project]
+name = "vocab-collector"
+version = "0.1.0"
+description = "Passive Ctrl+C+C vocabulary collector for Windows"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pynput>=1.8,<2",
+    "pyperclip>=1.8,<2",
+    "openai>=1.40",
+    "pydantic>=2.6,<3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-mock>=3.12",
+    "pyinstaller>=6",
+]
+
+[build-system]
+requires = ["uv_build>=0.9,<0.13"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "windows_e2e: Windows-only end-to-end tests (require a real desktop session)",
+]
