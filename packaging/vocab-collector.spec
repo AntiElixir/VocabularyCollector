@@ -9,7 +9,9 @@ a = Analysis(
     [os.path.join(ROOT, "scripts", "run_app.py")],
     pathex=[os.path.join(ROOT, "src")],
     binaries=[],
-    datas=[],
+    datas=[
+        (os.path.join(ROOT, "src", "vocab_collector", "templates"), "templates"),
+    ],
     hiddenimports=[
         "pynput.keyboard._win32",
         "pynput.mouse._win32",

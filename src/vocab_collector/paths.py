@@ -50,6 +50,13 @@ def html_path() -> Path:
     return data_dir() / "vocabulary.html"
 
 
+def templates_dir() -> Path:
+    """Directory containing web UI templates."""
+    if getattr(sys, "frozen", False):
+        return Path(sys._MEIPASS) / "templates"
+    return Path(__file__).resolve().parent / "templates"
+
+
 def ensure_dirs() -> None:
     """Create config/ and data/ next to the app if they are missing."""
     config_dir().mkdir(parents=True, exist_ok=True)

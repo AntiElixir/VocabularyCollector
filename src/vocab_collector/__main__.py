@@ -10,6 +10,7 @@ from .config import ConfigError, load_config
 from .llm import LLMClient
 from .logging_setup import install_excepthooks, setup_logging
 from .pipeline import Collector
+from .web import WebServer
 
 _LOG = logging.getLogger(__name__)
 
@@ -33,6 +34,9 @@ def main() -> int:
     db.init_schema(conn)
     html_export.write_atomic(paths.html_path(), html_export.render(db.list_all(conn)))
 
+    web_server = WebServer(config.web, conn, paths.templates_dir())
+    web_server.start()
+
     llm = LLMClient(config.llm)
     collector = Collector(config, conn, llm, paths).start()
 
@@ -47,6 +51,7 @@ def main() -> int:
     finally:
         listener.stop()
         collector.stop()
+        web_server.stop()
     return 0
 
 

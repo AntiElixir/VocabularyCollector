@@ -9,6 +9,7 @@ dependencies = [
     "pyperclip>=1.8,<2",
     "openai>=1.40",
     "pydantic>=2.6,<3",
+    "flask>=3.0,<4",
 ]
 
 [dependency-groups]

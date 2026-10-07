@@ -1,10 +1,23 @@
-# User-owned configuration (never committed)
+# User-owned configuration and local secrets
 config/config.toml
+*/config.toml
+*.local.toml
+*.local.json
+.env
+.env.*
+!.env.example
 
 # Runtime output
 data/
-dist/
+*.log
+
+# Build and release output
 build/
+dist/
+release/
+*.zip
+*.7z
+*.tar.gz
 
 # Internal work-plan evidence (not part of the published project)
 .omo/
@@ -12,5 +25,14 @@ build/
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 .venv/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor and OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

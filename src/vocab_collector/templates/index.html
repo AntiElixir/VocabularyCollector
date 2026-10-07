@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的词汇库</title>
+  <style>
+    :root {
+      --bg: #f3f6f8;
+      --surface: #fff;
+      --surface-alt: #f8fafb;
+      --border: #dce4ea;
+      --border-light: #e7edf1;
+      --text: #17212b;
+      --text-muted: #5c6b78;
+      --text-dim: #6a7783;
+      --primary: #147a76;
+      --primary-light: #e4f1ee;
+      --danger: #be3b43;
+      --shadow: rgba(28, 43, 56, .06);
+    }
+
+    [data-theme="dark"] {
+      --bg: #1a1f25;
+      --surface: #242a32;
+      --surface-alt: #2d343d;
+      --border: #3a424d;
+      --border-light: #333a44;
+      --text: #e8eaed;
+      --text-muted: #9aa0a6;
+      --text-dim: #80868b;
+      --primary: #4db6ac;
+      --primary-light: #1e3a38;
+      --danger: #f28b82;
+      --shadow: rgba(0, 0, 0, .2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .search-box {
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-alt);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .search-box::before {
+      content: "\1F50D";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      opacity: 0.5;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      transition: all .15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--surface-alt);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .toggle-all-btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all .15s;
+    }
+
+    .toggle-all-btn:hover {
+      background: var(--surface-alt);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .word-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all .15s;
+      position: relative;
+    }
+
+    .word-card:hover {
+      box-shadow: 0 4px 12px var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .word-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .word-english {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .word-domain {
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .word-chinese {
+      margin-top: 8px;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+      transition: filter .15s;
+    }
+
+    .word-chinese.hidden {
+      filter: blur(8px);
+      user-select: none;
+    }
+
+    .word-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .word-date {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .card-btn {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all .15s;
+    }
+
+    .card-btn:hover {
+      background: var(--surface-alt);
+    }
+
+    .card-btn.toggle-btn:hover {
+      color: var(--primary);
+    }
+
+    .card-btn.delete-btn:hover {
+      background: #fde8e9;
+      color: var(--danger);
+    }
+
+    [data-theme="dark"] .card-btn.delete-btn:hover {
+      background: rgba(242, 139, 130, 0.15);
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+    }
+
+    .page-btn {
+      min-width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all .15s;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      background: var(--surface-alt);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .page-info {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin: 0 8px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .confirm-dialog {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .confirm-dialog.show {
+      display: flex;
+    }
+
+    .confirm-box {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    .confirm-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .confirm-message {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .confirm-btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .confirm-btn.cancel {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .confirm-btn.cancel:hover {
+      background: var(--border-light);
+    }
+
+    .confirm-btn.danger {
+      background: var(--danger);
+      border: none;
+      color: #fff;
+    }
+
+    .confirm-btn.danger:hover {
+      opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+      .stats { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .header { flex-wrap: wrap; }
+      .search-box { max-width: 100%; order: 3; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <span class="brand">我的词汇库</span>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜索英文、释义或领域...">
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="refreshBtn" title="刷新">↻</button>
+      <button class="icon-btn" id="themeBtn" title="切换主题">🌙</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="totalCount">0</div>
+        <div class="stat-label">全部词汇</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="weeklyCount">0</div>
+        <div class="stat-label">本周新增</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="domainCount">0</div>
+        <div class="stat-label">涉及领域</div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <button class="toggle-all-btn" id="toggleAllBtn">隐藏全部释义</button>
+    </div>
+
+    <section class="cards" id="cardsContainer"></section>
+
+    <div class="pagination" id="pagination"></div>
+  </main>
+
+  <div class="confirm-dialog" id="confirmDialog">
+    <div class="confirm-box">
+      <div class="confirm-title">确认删除</div>
+      <div class="confirm-message">确定要永久删除这个单词吗？此操作无法撤销。</div>
+      <div class="confirm-actions">
+        <button class="confirm-btn cancel" id="cancelDelete">取消</button>
+        <button class="confirm-btn danger" id="confirmDelete">删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+    const PAGE_SIZE = 20;
+
+    let currentPage = 1;
+    let searchQuery = '';
+    let allHidden = false;
+    let deleteTargetId = null;
+
+    const searchInput = document.getElementById('searchInput');
+    const cardsContainer = document.getElementById('cardsContainer');
+    const pagination = document.getElementById('pagination');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const themeBtn = document.getElementById('themeBtn');
+    const toggleAllBtn = document.getElementById('toggleAllBtn');
+    const confirmDialog = document.getElementById('confirmDialog');
+    const cancelDelete = document.getElementById('cancelDelete');
+    const confirmDelete = document.getElementById('confirmDelete');
+
+    function getTheme() {
+      return localStorage.getItem('theme') || 'light';
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    themeBtn.addEventListener('click', () => {
+      setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+    });
+
+    setTheme(getTheme());
+
+    async function fetchStats() {
+      const res = await fetch(`${API_BASE}/api/stats`);
+      const data = await res.json();
+      document.getElementById('totalCount').textContent = data.total;
+      document.getElementById('weeklyCount').textContent = data.weekly;
+      document.getElementById('domainCount').textContent = data.domains;
+    }
+
+    async function fetchWords() {
+      const offset = (currentPage - 1) * PAGE_SIZE;
+      const params = new URLSearchParams({
+        q: searchQuery,
+        offset: offset,
+        limit: PAGE_SIZE
+      });
+      const res = await fetch(`${API_BASE}/api/words?${params}`);
+      const data = await res.json();
+      return data;
+    }
+
+    function renderCards(words) {
+      if (words.length === 0) {
+        cardsContainer.innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <div class="empty-state-icon">📚</div>
+            <div>暂无词汇记录</div>
+          </div>
+        `;
+        return;
+      }
+
+      cardsContainer.innerHTML = words.map(word => `
+        <div class="word-card" data-id="${word.id}">
+          <div class="word-card-header">
+            <span class="word-english">${escapeHtml(word.english)}</span>
+            <span class="word-domain">${escapeHtml(word.domain)}</span>
+          </div>
+          <div class="word-chinese ${allHidden ? 'hidden' : ''}">${escapeHtml(word.chinese)}</div>
+          <div class="word-card-footer">
+            <span class="word-date">${formatDate(word.created_at)}</span>
+            <div class="card-actions">
+              <button class="card-btn toggle-btn" onclick="toggleMeaning(this)" title="显示/隐藏释义">👁</button>
+              <button class="card-btn delete-btn" onclick="showDeleteConfirm(${word.id})" title="永久删除">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPagination(total) {
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + 4);
+
+      if (startPage > 1) {
+        html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+        if (startPage > 2) html += `<span class="page-info">...</span>`;
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) html += `<span class="page-info">...</span>`;
+        html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+      }
+
+      html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+
+      pagination.innerHTML = html;
+    }
+
+    async function loadPage() {
+      const [words, stats] = await Promise.all([
+        fetchWords(),
+        fetchStats()
+      ]);
+      renderCards(words.words);
+      renderPagination(stats.total);
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      loadPage();
+    }
+
+    function toggleMeaning(btn) {
+      const card = btn.closest('.word-card');
+      const meaning = card.querySelector('.word-chinese');
+      meaning.classList.toggle('hidden');
+    }
+
+    toggleAllBtn.addEventListener('click', () => {
+      allHidden = !allHidden;
+      toggleAllBtn.textContent = allHidden ? '显示全部释义' : '隐藏全部释义';
+      document.querySelectorAll('.word-chinese').forEach(el => {
+        el.classList.toggle('hidden', allHidden);
+      });
+    });
+
+    function showDeleteConfirm(id) {
+      deleteTargetId = id;
+      confirmDialog.classList.add('show');
+    }
+
+    cancelDelete.addEventListener('click', () => {
+      confirmDialog.classList.remove('show');
+      deleteTargetId = null;
+    });
+
+    confirmDelete.addEventListener('click', async () => {
+      if (deleteTargetId === null) return;
+      await fetch(`${API_BASE}/api/words/${deleteTargetId}`, { method: 'DELETE' });
+      confirmDialog.classList.remove('show');
+      deleteTargetId = null;
+      loadPage();
+    });
+
+    confirmDialog.addEventListener('click', (e) => {
+      if (e.target === confirmDialog) {
+        confirmDialog.classList.remove('show');
+        deleteTargetId = null;
+      }
+    });
+
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchQuery = e.target.value.trim();
+        currentPage = 1;
+        loadPage();
+      }, 300);
+    });
+
+    refreshBtn.addEventListener('click', loadPage);
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString('zh-CN');
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

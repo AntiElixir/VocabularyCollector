@@ -67,3 +67,65 @@ def list_all(conn: sqlite3.Connection) -> list[tuple[str, str, str, str]]:
         "ORDER BY created_at DESC, id DESC"
     )
     return cursor.fetchall()
+
+
+def search_words(
+    conn: sqlite3.Connection,
+    query: str = "",
+    offset: int = 0,
+    limit: int = 20,
+) -> list[tuple[int, str, str, str, str]]:
+    """Search words with pagination. Returns (id, english, chinese, domain, created_at)."""
+    if query.strip():
+        pattern = f"%{query}%"
+        cursor = conn.execute(
+            "SELECT id, english, chinese, domain, created_at FROM vocabulary "
+            "WHERE english LIKE ? OR chinese LIKE ? OR domain LIKE ? "
+            "ORDER BY created_at DESC, id DESC "
+            "LIMIT ? OFFSET ?",
+            (pattern, pattern, pattern, limit, offset),
+        )
+    else:
+        cursor = conn.execute(
+            "SELECT id, english, chinese, domain, created_at FROM vocabulary "
+            "ORDER BY created_at DESC, id DESC "
+            "LIMIT ? OFFSET ?",
+            (limit, offset),
+        )
+    return cursor.fetchall()
+
+
+def count_words(conn: sqlite3.Connection, query: str = "") -> int:
+    """Count total words matching the query."""
+    if query.strip():
+        pattern = f"%{query}%"
+        cursor = conn.execute(
+            "SELECT COUNT(*) FROM vocabulary "
+            "WHERE english LIKE ? OR chinese LIKE ? OR domain LIKE ?",
+            (pattern, pattern, pattern),
+        )
+    else:
+        cursor = conn.execute("SELECT COUNT(*) FROM vocabulary")
+    return cursor.fetchone()[0]
+
+
+def delete_word(conn: sqlite3.Connection, word_id: int) -> bool:
+    """Delete a word by ID. Returns True if a row was deleted."""
+    cursor = conn.execute("DELETE FROM vocabulary WHERE id = ?", (word_id,))
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def get_weekly_count(conn: sqlite3.Connection) -> int:
+    """Count words added in the last 7 days."""
+    cursor = conn.execute(
+        "SELECT COUNT(*) FROM vocabulary "
+        "WHERE created_at >= datetime('now', '-7 days')"
+    )
+    return cursor.fetchone()[0]
+
+
+def get_domain_count(conn: sqlite3.Connection) -> int:
+    """Count distinct domains."""
+    cursor = conn.execute("SELECT COUNT(DISTINCT domain) FROM vocabulary")
+    return cursor.fetchone()[0]

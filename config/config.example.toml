@@ -14,3 +14,7 @@ max_selection_chars = 64
 double_tap_window_ms = 400
 clipboard_wait_ms = 400
 log_level = "INFO"
+
+[web]
+host = "127.0.0.1"
+port = 8765

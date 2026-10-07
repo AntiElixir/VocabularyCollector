@@ -31,9 +31,16 @@ class AppConfig:
 
 
 @dataclass(frozen=True)
+class WebConfig:
+    host: str = "127.0.0.1"
+    port: int = 8765
+
+
+@dataclass(frozen=True)
 class Config:
     llm: LlmConfig
     app: AppConfig
+    web: WebConfig
 
     def redacted_summary(self) -> str:
         """Human-readable summary that never contains the API key."""
@@ -44,7 +51,8 @@ class Config:
             f"max_selection_chars={self.app.max_selection_chars} "
             f"double_tap_window_ms={self.app.double_tap_window_ms} "
             f"clipboard_wait_ms={self.app.clipboard_wait_ms} "
-            f"log_level={self.app.log_level}"
+            f"log_level={self.app.log_level} "
+            f"web_host={self.web.host} web_port={self.web.port}"
         )
 
 
@@ -102,6 +110,17 @@ def load_config(path: Path | str) -> Config:
     except (TypeError, ValueError) as exc:
         raise ConfigError(f"Invalid value in [app]: {exc}") from exc
 
+    web_raw = raw.get("web", {})
+    if not isinstance(web_raw, dict):
+        raise ConfigError(f"[web] must be a table in {path}.")
+    try:
+        web = WebConfig(
+            host=str(web_raw.get("host", "127.0.0.1")),
+            port=int(web_raw.get("port", 8765)),
+        )
+    except (TypeError, ValueError) as exc:
+        raise ConfigError(f"Invalid value in [web]: {exc}") from exc
+
     return Config(
         llm=LlmConfig(
             base_url=base_url,
@@ -111,4 +130,5 @@ def load_config(path: Path | str) -> Config:
             max_retries=max_retries,
         ),
         app=app,
+        web=web,
     )
