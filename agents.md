@@ -50,3 +50,4 @@ VocabularyCollector 是一个 Windows 便携式后台工具。用户在任意程
 - 发布 zip 应以干净构建产物为准：包含 exe、依赖、资源、`config/config.example.toml`、`README.md` 和 `LICENSE`；排除真实配置、`data/`、日志、数据库、缓存和本地测试产物。
 - 修改打包、配置或路径逻辑后，至少运行 `uv run pytest tests/test_build_hygiene.py`；改动核心逻辑后运行默认测试集。
 - `windows_e2e` 需要真实桌面会话，默认测试不依赖它。报告验证结果时要区分默认测试和 `windows_e2e`。
+- 每一小段任务完成后，例行收尾：1) 更新 README（进度、功能描述等）；2) `git add` + `git commit` + `git push` 推送到 GitHub。
