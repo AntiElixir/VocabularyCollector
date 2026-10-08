@@ -25,14 +25,13 @@ VocabularyCollector 是一个 Windows 便携式后台工具。用户在任意程
 - README 是项目进度参照。开发项目前、开发过程中和开发完成后，都要及时更新 README：先将计划工作记录为待办项，实施时同步状态，完成后更新进度记录、使用方式和验证结果。
 - 真实密钥只可存在于 `config/config.toml` 或用户明确指定的安全位置。该文件必须保持被忽略，不能记录、提交或复制到发布包。
 - 构建命令是 `pwsh scripts/build.ps1`。`dist/VocabularyCollector/` 只包含 exe、依赖、资源、`config/config.example.toml`、`README.md` 和 `LICENSE`；不包含真实配置、`data/`、日志、数据库、缓存或本地测试产物。
-- 默认验证命令是 `uv run pytest`；`uv run pytest -m windows_e2e` 需要真实 Windows 桌面会话，结果必须与默认测试分开报告。
+- 默认验证命令是 `uv run pytest`。
 - 修改打包、配置或路径逻辑后，至少运行 `uv run pytest tests/test_build_hygiene.py`。
-- `windows_e2e` 已知会受 `notepad.exe` 前台焦点抢占影响而不稳定；不要把该问题误报为普通单元测试失败。
 
 # 当前进度
 
 - 核心模块已完成：配置、路径解析、日志、LLM 调用、响应模型、剪贴板读取、全局热键、队列编排、SQLite 存储、HTML 导出和守护进程入口。
-- 非 `windows_e2e` 测试此前已在本机跑到 `77 passed`。
+- 测试此前已在本机跑到 `77 passed`。
 - PyInstaller onedir 打包流程已完成，产物位于 `dist/VocabularyCollector/`。
 - 构建脚本只复制 `config/config.example.toml`，不会把真实的 `config/config.toml` 打进发布目录。
 - `tests/test_build_hygiene.py` 会检查 `dist/` 中没有真实 key、没有真实 `config.toml`，并确认 `.gitignore` 覆盖敏感配置和运行数据。
@@ -40,7 +39,6 @@ VocabularyCollector 是一个 Windows 便携式后台工具。用户在任意程
 
 # 仍需注意
 
-- `windows_e2e` 目前不稳定，主要卡在 `notepad.exe` 前台焦点抢占。后续可以改用 `SetForegroundWindow` + `AttachThreadInput`，或让每个用例启动独立记事本并等待窗口就绪。
 - 接口失败只写日志，不自动补录；这是当前的有意取舍。
 - 数据库已预留 `fsrs_*` 列，但还没有复习算法。
 
@@ -49,5 +47,4 @@ VocabularyCollector 是一个 Windows 便携式后台工具。用户在任意程
 - 真实密钥只能放在 `config/config.toml` 或用户明确指定的安全位置；不要提交真实配置，也不要把真实配置复制进 release 包。
 - 发布 zip 应以干净构建产物为准：包含 exe、依赖、资源、`config/config.example.toml`、`README.md` 和 `LICENSE`；排除真实配置、`data/`、日志、数据库、缓存和本地测试产物。
 - 修改打包、配置或路径逻辑后，至少运行 `uv run pytest tests/test_build_hygiene.py`；改动核心逻辑后运行默认测试集。
-- `windows_e2e` 需要真实桌面会话，默认测试不依赖它。报告验证结果时要区分默认测试和 `windows_e2e`。
 - 每一小段任务完成后，例行收尾：1) 更新 README（进度、功能描述等）；2) `git add` + `git commit` + `git push` 推送到 GitHub。

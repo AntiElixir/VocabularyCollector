@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Build exe
+        run: pwsh scripts/build.ps1
+
+      - name: Create release archive
+        run: |
+          cd dist
+          7z a -tzip VocabularyCollector-${{ github.ref_name }}.zip VocabularyCollector/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/VocabularyCollector-${{ github.ref_name }}.zip
+          generate_release_notes: true

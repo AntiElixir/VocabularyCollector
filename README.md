@@ -29,8 +29,6 @@
 | Web 词库页面（Flask、搜索、分页、删除、编辑、亮/暗主题）             | `src/vocab_collector/web.py`、`src/vocab_collector/templates/index.html`   | 待补充                                                | 完成       |
 | 打包（PyInstaller onedir、无控制台、无 UPX、附带示例配置）          | `packaging/vocab-collector.spec`、`scripts/build.ps1`、`scripts/run_app.py` | `tests/test_build_hygiene.py`                         | 完成       |
 | 构建产物卫生检查（dist 内无真实 key、无真实 config）                | `tests/test_build_hygiene.py`                                             | 自身                                                    | 完成       |
-| 端到端：真实捕获 -> 建库 -> 刷新页面                            | `tests/test_e2e_capture.py`、`tests/e2e_support.py`                        | 自身（`windows_e2e`）                                     | 不稳定，见第八节 |
-| 端到端：失败路径（接口错误、超时、缺配置、陈旧剪贴板）                       | `tests/test_e2e_failures.py`、`tests/e2e_support.py`                       | 自身（`windows_e2e`）                                     | 不稳定，见第八节 |
 
 ## 二、工作原理（一次捕获的完整链路）
 
@@ -106,8 +104,7 @@ uv run python -m vocab_collector
 ## 六、测试
 
 ```powershell
-uv run pytest                 # 单元 + 集成测试（默认排除 windows_e2e）
-uv run pytest -m windows_e2e  # 需要真实桌面会话的端到端测试
+uv run pytest
 ```
 
 ## 七、打包构建
@@ -118,6 +115,35 @@ pwsh scripts/build.ps1
 
 产物在 `dist/VocabularyCollector/`。构建脚本只会把 `config/config.example.toml` 复制进 `dist/config/`，不会打包真实密钥。
 
+### 自动化构建（GitHub Actions）
+
+项目配置了两个 GitHub Actions workflow：
+
+**CI（持续集成）**
+- 每次 push 到 `main` 或提交 PR 时自动运行测试
+- 确保代码改动不会破坏现有功能
+
+**Release（自动发布）**
+- 推送 `v*` 格式的 tag 时自动触发（例如 `v0.1.1`）
+- 在 GitHub 的 Windows 服务器上构建 exe
+- 自动打包并上传到 GitHub Release
+- 用户可以直接从 Release 页面下载最新版本
+
+发布新版本的流程：
+```powershell
+# 1. 更新 pyproject.toml 中的 version
+# 2. 提交并推送
+git add pyproject.toml
+git commit -m "bump version to 0.1.1"
+git push
+
+# 3. 打 tag 并推送
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+推送 tag 后，GitHub Actions 会自动构建并创建 Release，无需手动操作。
+
 ## 八、开发进度记录
 
 用此清单维护项目状态。开始工作前登记待办，实施中标记进行中，完成后补充验证结果。
@@ -125,7 +151,7 @@ pwsh scripts/build.ps1
 ### 已完成
 
 - [x] 核心模块：配置、路径、日志、LLM、模型、剪贴板、手势、队列、SQLite 存储、HTML 导出和守护进程入口。
-- [x] 默认测试集曾在本机通过：`77 passed`（不含 `windows_e2e`）。
+- [x] 默认测试集曾在本机通过：`77 passed`。
 - [x] PyInstaller onedir 打包：可生成无控制台的 `dist/VocabularyCollector/`。
 - [x] 手动验证：已确认 `Ctrl+C+C` 手势可用。
 - [x] 修复热键虚拟键码识别：`pynput.Key` 的键码来自 `key.value.vk`，并将 `VK_CONTROL = 0x11` 纳入 Ctrl 判定。
@@ -138,13 +164,14 @@ pwsh scripts/build.ps1
 - [x] 剪贴板等待超时默认值从 400ms 调整为 800ms，减少慢响应程序的 `rejected timeout`。
 - [x] 词卡图标统一彩色：三个操作按钮（👁️ ✏️ 🗑️）均添加 U+FE0F 变体选择符，确保在所有系统上渲染为彩色 emoji。
 - [x] 编辑快捷键：修改释义时按 Enter 直接保存（Shift+Enter 换行），无需点击保存按钮。
+- [x] 删除端到端测试：移除不稳定的 `windows_e2e` 测试（`test_e2e_capture`、`test_e2e_failures`、`test_listener_smoke`）。
+- [x] GitHub Actions CI：每次 push 或 PR 自动运行测试。
+- [x] GitHub Actions Release：推送 `v*` tag 时自动构建 exe 并上传到 GitHub Release。
 
 ### 进行中
 
 ### 待办
 
-- [ ] 稳定 `windows_e2e`：`test_e2e_capture` / `test_e2e_failures` 容易受到 `notepad.exe` 前台焦点抢占影响；可研究 `SetForegroundWindow`、`AttachThreadInput` 或为每个用例启动独立记事本。
-- [ ] 发布自动化：按需加入 GitHub Actions 的 CI 与 Release。
 - [ ] FSRS 复习逻辑：数据库已有 `fsrs_*` 预留列，但尚无算法。
 
 ## 九、已知限制
@@ -181,7 +208,7 @@ VocabularyCollector/
 │  ├─ templates/
 │  │  └─ index.html            # 词库网页模板
 │  └─ __init__.py
-├─ tests/                      # pytest 测试（含 windows_e2e）
+├─ tests/                      # pytest 测试
 ├─ pyproject.toml
 ├─ uv.lock
 └─ README.md
