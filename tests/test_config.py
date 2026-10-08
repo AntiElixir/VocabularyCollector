@@ -47,7 +47,7 @@ def test_defaults_applied_when_app_section_absent(tmp_path):
     cfg = load_config(_write(tmp_path, text))
     assert cfg.app.max_selection_chars == 64
     assert cfg.app.double_tap_window_ms == 400
-    assert cfg.app.clipboard_wait_ms == 400
+    assert cfg.app.clipboard_wait_ms == 800
     assert cfg.app.log_level == "INFO"
     assert cfg.llm.timeout_seconds == 30
     assert cfg.llm.max_retries == 0

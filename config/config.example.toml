@@ -15,7 +15,7 @@ rate_limit_retry_wait = 60
 [app]
 max_selection_chars = 64
 double_tap_window_ms = 400
-clipboard_wait_ms = 400
+clipboard_wait_ms = 800
 log_level = "INFO"
 
 [web]

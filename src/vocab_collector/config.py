@@ -27,7 +27,7 @@ class LlmConfig:
 class AppConfig:
     max_selection_chars: int = 64
     double_tap_window_ms: int = 400
-    clipboard_wait_ms: int = 400
+    clipboard_wait_ms: int = 800
     log_level: str = "INFO"
 
 
@@ -108,7 +108,7 @@ def load_config(path: Path | str) -> Config:
         app = AppConfig(
             max_selection_chars=int(app_raw.get("max_selection_chars", 64)),
             double_tap_window_ms=int(app_raw.get("double_tap_window_ms", 400)),
-            clipboard_wait_ms=int(app_raw.get("clipboard_wait_ms", 400)),
+            clipboard_wait_ms=int(app_raw.get("clipboard_wait_ms", 800)),
             log_level=str(app_raw.get("log_level", "INFO")),
         )
     except (TypeError, ValueError) as exc:

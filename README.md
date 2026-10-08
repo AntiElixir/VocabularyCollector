@@ -75,7 +75,7 @@ uv run python -m vocab_collector
 | `llm.rate_limit_retry_wait`| `60`                                | 收到 429 限流后等待多少秒再重试一次 |
 | `app.max_selection_chars`  | `64`                                | 允许的最大选区长度          |
 | `app.double_tap_window_ms` | `400`                               | 两次 C 之间允许的最大间隔     |
-| `app.clipboard_wait_ms`    | `400`                               | 等待剪贴板更新的最长时间       |
+| `app.clipboard_wait_ms`    | `800`                               | 等待剪贴板更新的最长时间       |
 | `app.log_level`            | `INFO`                              | 日志级别               |
 | `web.host`                 | `127.0.0.1`                         | Web 服务监听地址          |
 | `web.port`                 | `8765`                              | Web 服务端口             |
@@ -135,6 +135,7 @@ pwsh scripts/build.ps1
 - [x] 限流保护：禁用 SDK 自动重试，429 错误等待 60 秒后重试一次，避免快速消耗 API 配额。
 - [x] 构建保护：重新构建时自动备份并恢复 `data/`（数据库）和 `config/config.toml`（API key），避免数据丢失。
 - [x] 词卡编辑：卡片 footer 增加 ✏️ 按钮，点击后就地编辑中文释义，保存后即时更新。
+- [x] 剪贴板等待超时默认值从 400ms 调整为 800ms，减少慢响应程序的 `rejected timeout`。
 
 ### 进行中
 

@@ -115,7 +115,7 @@ def write_config(base_url: str, api_key: str = "sk-e2e-stub") -> None:
         "[app]\n"
         "max_selection_chars = 64\n"
         "double_tap_window_ms = 400\n"
-        "clipboard_wait_ms = 400\n"
+        "clipboard_wait_ms = 800\n"
         'log_level = "INFO"\n',
         encoding="utf-8",
     )
