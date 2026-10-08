@@ -1,5 +1,9 @@
 # Vocab Collector
 
+![Web 词库页面 - 亮色主题](docs/screenshot-light.png)
+
+![Web 词库页面 - 暗色主题](docs/screenshot-dark.png)
+
 在任意程序里选中一个英文单词，按住 `Ctrl` 连按两次 `C`，它就会调用大模型取回**中文释义**和**学科**，写入本地数据库，并刷新一个可直接用浏览器打开的单词表。
 
 它常驻后台：没有窗口、不弹提示、不托盘、不注册开机启动、不做云同步。整个文件夹是便携的——双击一个 `exe` 即可运行，不需要 Python、Node 或安装器。推荐通过 win+r 输入`shell:startup` 将 `exe` 放入，即可开机自启。
@@ -100,14 +104,6 @@ uv run python -m vocab_collector
 - **编辑**：点击铅笔图标就地修改中文释义，Enter 保存 / Shift+Enter 换行
 - **主题**：支持亮色/暗色主题切换（自动记住偏好）
 - **释义隐藏**：可隐藏/显示单条或全部释义
-
-亮色主题：
-
-![Web 词库页面 - 亮色主题](docs/screenshot-light.png)
-
-暗色主题：
-
-![Web 词库页面 - 暗色主题](docs/screenshot-dark.png)
 
 ## 七、测试
 
