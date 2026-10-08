@@ -46,7 +46,9 @@ Copy-Item -Force (Join-Path $root "config\config.example.toml") (Join-Path $dist
 if (Test-Path $backupDir) {
     $dataBackup = Join-Path $backupDir "data"
     if (Test-Path $dataBackup) {
-        Copy-Item -Recurse -Force $dataBackup (Join-Path $dist "data")
+        $dataDst = Join-Path $dist "data"
+        if (Test-Path $dataDst) { Remove-Item -Recurse -Force $dataDst }
+        Copy-Item -Recurse -Force $dataBackup $dataDst
         Write-Host "Restored data/"
     }
 
