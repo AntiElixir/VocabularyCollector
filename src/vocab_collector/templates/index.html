@@ -599,9 +599,9 @@
           <div class="word-card-footer">
             <span class="word-date">${formatDate(word.created_at)}</span>
             <div class="card-actions">
-              <button class="card-btn toggle-btn" onclick="toggleMeaning(this)" title="显示/隐藏释义">👁</button>
+              <button class="card-btn toggle-btn" onclick="toggleMeaning(this)" title="显示/隐藏释义">👁️</button>
               <button class="card-btn edit-btn" onclick="startEdit(this)" title="修改释义">✏️</button>
-              <button class="card-btn delete-btn" onclick="showDeleteConfirm(${word.id})" title="永久删除">🗑</button>
+              <button class="card-btn delete-btn" onclick="showDeleteConfirm(${word.id})" title="永久删除">🗑️</button>
             </div>
           </div>
         </div>
@@ -681,6 +681,12 @@
       meaningEl.after(editArea);
 
       const textarea = editArea.querySelector('textarea');
+      textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          saveEdit(editArea.querySelector('.edit-btn-sm.save'), wordId);
+        }
+      });
       textarea.focus();
       textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     }
