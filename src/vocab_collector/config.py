@@ -19,7 +19,8 @@ class LlmConfig:
     api_key: str
     model: str
     timeout_seconds: float = 30.0
-    max_retries: int = 2
+    max_retries: int = 0
+    rate_limit_retry_wait: int = 60
 
 
 @dataclass(frozen=True)
@@ -47,7 +48,9 @@ class Config:
         return (
             f"base_url={self.llm.base_url} model={self.llm.model} "
             f"timeout_seconds={self.llm.timeout_seconds} "
-            f"max_retries={self.llm.max_retries} api_key=*** "
+            f"max_retries={self.llm.max_retries} "
+            f"rate_limit_retry_wait={self.llm.rate_limit_retry_wait} "
+            f"api_key=*** "
             f"max_selection_chars={self.app.max_selection_chars} "
             f"double_tap_window_ms={self.app.double_tap_window_ms} "
             f"clipboard_wait_ms={self.app.clipboard_wait_ms} "
@@ -93,7 +96,8 @@ def load_config(path: Path | str) -> Config:
 
     try:
         timeout_seconds = float(llm_raw.get("timeout_seconds", 30))
-        max_retries = int(llm_raw.get("max_retries", 2))
+        max_retries = int(llm_raw.get("max_retries", 0))
+        rate_limit_retry_wait = int(llm_raw.get("rate_limit_retry_wait", 60))
     except (TypeError, ValueError) as exc:
         raise ConfigError(f"Invalid numeric value in [llm]: {exc}") from exc
 
@@ -128,6 +132,7 @@ def load_config(path: Path | str) -> Config:
             model=model,
             timeout_seconds=timeout_seconds,
             max_retries=max_retries,
+            rate_limit_retry_wait=rate_limit_retry_wait,
         ),
         app=app,
         web=web,

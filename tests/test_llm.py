@@ -38,6 +38,12 @@ def _bad_request(message):
     return openai.BadRequestError(message, response=response, body=None)
 
 
+def _rate_limit_error():
+    request = httpx.Request("POST", "https://example.test/api/v1/chat/completions")
+    response = httpx.Response(429, request=request)
+    return openai.RateLimitError("rate limited", response=response, body=None)
+
+
 def _client(responses):
     completions = FakeCompletions(responses)
     fake = SimpleNamespace(chat=SimpleNamespace(completions=completions))
@@ -115,5 +121,27 @@ def test_fallback_failure_raises_llm_error():
         [_bad_request("response_format unsupported"), _completion("still junk")]
     )
     with pytest.raises(LLMError):
+        client.collect("a")
+    assert len(completions.calls) == 2
+
+
+def test_rate_limit_retries_once_after_wait(monkeypatch):
+    content = json.dumps({"english": "a", "chinese": "中", "domain": "AI"})
+    client, completions = _client([_rate_limit_error(), _completion(content)])
+    sleeps = []
+    monkeypatch.setattr("vocab_collector.llm.time.sleep", lambda s: sleeps.append(s))
+
+    result = client.collect("a")
+
+    assert result.chinese == "中"
+    assert len(completions.calls) == 2
+    assert sleeps == [60]
+
+
+def test_rate_limit_retry_failure_raises_llm_error(monkeypatch):
+    client, completions = _client([_rate_limit_error(), _rate_limit_error()])
+    monkeypatch.setattr("vocab_collector.llm.time.sleep", lambda s: None)
+
+    with pytest.raises(LLMError, match="rate-limit retry"):
         client.collect("a")
     assert len(completions.calls) == 2

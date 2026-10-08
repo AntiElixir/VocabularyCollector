@@ -71,7 +71,8 @@ uv run python -m vocab_collector
 | `llm.api_key`              | `sk-REPLACE_ME`                     | 你的密钥（必须替换，否则启动即报错） |
 | `llm.model`                | `deepseek-chat`                     | 模型名                |
 | `llm.timeout_seconds`      | `30`                                | 单次请求超时             |
-| `llm.max_retries`          | `2`                                 | 请求重试次数             |
+| `llm.max_retries`          | `0`                                 | SDK 级别重试次数（禁用以避免快速消耗配额） |
+| `llm.rate_limit_retry_wait`| `60`                                | 收到 429 限流后等待多少秒再重试一次 |
 | `app.max_selection_chars`  | `64`                                | 允许的最大选区长度          |
 | `app.double_tap_window_ms` | `400`                               | 两次 C 之间允许的最大间隔     |
 | `app.clipboard_wait_ms`    | `400`                               | 等待剪贴板更新的最长时间       |
@@ -130,13 +131,13 @@ pwsh scripts/build.ps1
 - [x] 本机词库网页：以固定地址 `http://127.0.0.1:8765/` 提供服务（端口可配置），主程序启动时自动启动服务。
 - [x] 本机词库网页：SQLite 数据源；支持搜索、分页、刷新和单条永久删除。
 - [x] 本机词库网页：紧凑词卡布局；支持亮/暗主题、单卡片释义隐藏/显示、全部释义隐藏/显示。
+- [x] 限流保护：禁用 SDK 自动重试，429 错误等待 60 秒后重试一次，避免快速消耗 API 配额。
 
 ### 进行中
 
 ### 待办
 
 - [ ] 稳定 `windows_e2e`：`test_e2e_capture` / `test_e2e_failures` 容易受到 `notepad.exe` 前台焦点抢占影响；可研究 `SetForegroundWindow`、`AttachThreadInput` 或为每个用例启动独立记事本。
-- [ ] 失败重试或补录队列：当前接口失败仅记日志。
 - [ ] 发布自动化：按需加入 GitHub Actions 的 CI 与 Release。
 - [ ] FSRS 复习逻辑：数据库已有 `fsrs_*` 预留列，但尚无算法。
 
@@ -145,7 +146,7 @@ pwsh scripts/build.ps1
 - 以管理员权限运行的程序（UIPI）看不到你的手势。
 - 终端里 `Ctrl+C` 不是复制，因此终端中通常无法触发。
 - 受保护的扫描版 PDF 选不中文字，自然也无法复制。
-- 没有重试队列：接口失败只写日志，不会自动补录。
+- 限流保护：收到 429 后会等待 60 秒再重试一次，若仍失败则仅记日志，不会自动补录。
 - 选中一整行代码这类「垃圾输入」也会被当成单词送出去，最多记录一次失败。
 - 电脑休眠唤醒后若手势失灵，重启程序即可。
 - 若在 `dist/` 里手动放了真实 `config.toml`，`tests/test_build_hygiene.py` 的 dist 检查会失败——这是预期行为，该检查针对的是「刚构建出来、尚未填入密钥」的发布产物。

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 
 import openai
 from openai import OpenAI
@@ -79,6 +80,16 @@ class LLMClient:
                 content, finish_reason = self._request(word, strict=False)
             except openai.OpenAIError as fallback_exc:
                 raise LLMError(f"request failed: {fallback_exc}") from fallback_exc
+        except openai.RateLimitError as exc:
+            _LOG.warning(
+                "rate limited (429), waiting %ds before retry",
+                self._config.rate_limit_retry_wait,
+            )
+            time.sleep(self._config.rate_limit_retry_wait)
+            try:
+                content, finish_reason = self._request(word, strict=True)
+            except openai.OpenAIError as retry_exc:
+                raise LLMError(f"request failed after rate-limit retry: {retry_exc}") from retry_exc
         except openai.OpenAIError as exc:
             raise LLMError(f"request failed: {exc}") from exc
 

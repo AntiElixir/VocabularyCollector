@@ -12,6 +12,7 @@ api_key = "sk-real-secret"
 model = "deepseek-chat"
 timeout_seconds = 12
 max_retries = 3
+rate_limit_retry_wait = 30
 
 [app]
 max_selection_chars = 32
@@ -34,6 +35,7 @@ def test_valid_file_loads(tmp_path):
     assert cfg.llm.model == "deepseek-chat"
     assert cfg.llm.timeout_seconds == 12
     assert cfg.llm.max_retries == 3
+    assert cfg.llm.rate_limit_retry_wait == 30
     assert cfg.app.max_selection_chars == 32
     assert cfg.app.double_tap_window_ms == 250
     assert cfg.app.clipboard_wait_ms == 300
@@ -48,7 +50,8 @@ def test_defaults_applied_when_app_section_absent(tmp_path):
     assert cfg.app.clipboard_wait_ms == 400
     assert cfg.app.log_level == "INFO"
     assert cfg.llm.timeout_seconds == 30
-    assert cfg.llm.max_retries == 2
+    assert cfg.llm.max_retries == 0
+    assert cfg.llm.rate_limit_retry_wait == 60
 
 
 def test_missing_file_names_the_path(tmp_path):

@@ -7,7 +7,10 @@ base_url = "https://models.sjtu.edu.cn/api/v1"
 api_key = "sk-REPLACE_ME"
 model = "deepseek-chat"
 timeout_seconds = 30
-max_retries = 2
+# SDK-level retries disabled to avoid burning quota on 429s.
+max_retries = 0
+# Seconds to wait before retrying once after a 429 rate-limit error.
+rate_limit_retry_wait = 60
 
 [app]
 max_selection_chars = 64
