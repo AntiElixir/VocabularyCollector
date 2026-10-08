@@ -272,6 +272,10 @@
       color: var(--primary);
     }
 
+    .card-btn.edit-btn:hover {
+      color: var(--primary);
+    }
+
     .card-btn.delete-btn:hover {
       background: #fde8e9;
       color: var(--danger);
@@ -279,6 +283,63 @@
 
     [data-theme="dark"] .card-btn.delete-btn:hover {
       background: rgba(242, 139, 130, 0.15);
+    }
+
+    .edit-area {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .edit-area textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 8px 10px;
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      background: var(--surface-alt);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .edit-btn-sm {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .edit-btn-sm.save {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+    }
+
+    .edit-btn-sm.save:hover {
+      opacity: 0.9;
+    }
+
+    .edit-btn-sm.cancel {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .edit-btn-sm.cancel:hover {
+      background: var(--border-light);
     }
 
     .pagination {
@@ -539,6 +600,7 @@
             <span class="word-date">${formatDate(word.created_at)}</span>
             <div class="card-actions">
               <button class="card-btn toggle-btn" onclick="toggleMeaning(this)" title="显示/隐藏释义">👁</button>
+              <button class="card-btn edit-btn" onclick="startEdit(this)" title="修改释义">✏️</button>
               <button class="card-btn delete-btn" onclick="showDeleteConfirm(${word.id})" title="永久删除">🗑</button>
             </div>
           </div>
@@ -596,6 +658,70 @@
       const card = btn.closest('.word-card');
       const meaning = card.querySelector('.word-chinese');
       meaning.classList.toggle('hidden');
+    }
+
+    function startEdit(btn) {
+      const card = btn.closest('.word-card');
+      if (card.querySelector('.edit-area')) return;
+      const meaningEl = card.querySelector('.word-chinese');
+      const originalText = meaningEl.textContent;
+      const wordId = card.dataset.id;
+
+      meaningEl.style.display = 'none';
+
+      const editArea = document.createElement('div');
+      editArea.className = 'edit-area';
+      editArea.innerHTML = `
+        <textarea>${escapeHtml(originalText)}</textarea>
+        <div class="edit-actions">
+          <button class="edit-btn-sm cancel" onclick="cancelEdit(this)">取消</button>
+          <button class="edit-btn-sm save" onclick="saveEdit(this, ${wordId})">保存</button>
+        </div>
+      `;
+      meaningEl.after(editArea);
+
+      const textarea = editArea.querySelector('textarea');
+      textarea.focus();
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }
+
+    function cancelEdit(btn) {
+      const card = btn.closest('.word-card');
+      const editArea = card.querySelector('.edit-area');
+      const meaningEl = card.querySelector('.word-chinese');
+      editArea.remove();
+      meaningEl.style.display = '';
+    }
+
+    async function saveEdit(btn, wordId) {
+      const card = btn.closest('.word-card');
+      const editArea = card.querySelector('.edit-area');
+      const textarea = editArea.querySelector('textarea');
+      const meaningEl = card.querySelector('.word-chinese');
+      const newChinese = textarea.value.trim();
+
+      if (!newChinese) {
+        textarea.focus();
+        return;
+      }
+
+      btn.textContent = '保存中...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/words/${wordId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chinese: newChinese })
+        });
+        if (!res.ok) throw new Error('save failed');
+        meaningEl.textContent = newChinese;
+        editArea.remove();
+        meaningEl.style.display = '';
+      } catch {
+        btn.textContent = '保存失败，重试';
+        btn.disabled = false;
+      }
     }
 
     toggleAllBtn.addEventListener('click', () => {

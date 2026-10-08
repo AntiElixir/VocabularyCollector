@@ -26,7 +26,7 @@
 | SQLite 存储（大小写不敏感去重、倒序查询、FSRS 预留列）                 | `src/vocab_collector/db.py`                                               | `tests/test_db.py`                                    | 完成       |
 | 自包含 HTML 导出（HTML 转义 + 原子写入）                       | `src/vocab_collector/html_export.py`                                      | `tests/test_html_export.py`                           | 完成       |
 | 守护进程入口（无参数、启动即监听）                                 | `src/vocab_collector/__main__.py`                                         | `tests/test_main.py`                                  | 完成       |
-| Web 词库页面（Flask、搜索、分页、删除、亮/暗主题）                  | `src/vocab_collector/web.py`、`src/vocab_collector/templates/index.html`   | 待补充                                                | 完成       |
+| Web 词库页面（Flask、搜索、分页、删除、编辑、亮/暗主题）             | `src/vocab_collector/web.py`、`src/vocab_collector/templates/index.html`   | 待补充                                                | 完成       |
 | 打包（PyInstaller onedir、无控制台、无 UPX、附带示例配置）          | `packaging/vocab-collector.spec`、`scripts/build.ps1`、`scripts/run_app.py` | `tests/test_build_hygiene.py`                         | 完成       |
 | 构建产物卫生检查（dist 内无真实 key、无真实 config）                | `tests/test_build_hygiene.py`                                             | 自身                                                    | 完成       |
 | 端到端：真实捕获 -> 建库 -> 刷新页面                            | `tests/test_e2e_capture.py`、`tests/e2e_support.py`                        | 自身（`windows_e2e`）                                     | 不稳定，见第八节 |
@@ -99,6 +99,7 @@ uv run python -m vocab_collector
 - **分页**：每页 20 条，支持翻页
 - **统计**：显示全部词汇数、本周新增、涉及领域数
 - **删除**：单条永久删除（有确认对话框）
+- **编辑**：点击铅笔图标就地修改中文释义
 - **主题**：支持亮色/暗色主题切换（自动记住偏好）
 - **释义隐藏**：可隐藏/显示单条或全部释义
 
@@ -133,6 +134,7 @@ pwsh scripts/build.ps1
 - [x] 本机词库网页：紧凑词卡布局；支持亮/暗主题、单卡片释义隐藏/显示、全部释义隐藏/显示。
 - [x] 限流保护：禁用 SDK 自动重试，429 错误等待 60 秒后重试一次，避免快速消耗 API 配额。
 - [x] 构建保护：重新构建时自动备份并恢复 `data/`（数据库）和 `config/config.toml`（API key），避免数据丢失。
+- [x] 词卡编辑：卡片 footer 增加 ✏️ 按钮，点击后就地编辑中文释义，保存后即时更新。
 
 ### 进行中
 

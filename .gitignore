@@ -21,6 +21,7 @@ release/
 
 # Internal work-plan evidence (not part of the published project)
 .omo/
+.superpowers/
 
 # Python
 __pycache__/

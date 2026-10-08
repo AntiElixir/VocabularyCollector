@@ -116,6 +116,16 @@ def delete_word(conn: sqlite3.Connection, word_id: int) -> bool:
     return cursor.rowcount > 0
 
 
+def update_chinese(conn: sqlite3.Connection, word_id: int, new_chinese: str) -> bool:
+    """Update the Chinese meaning for a word. Returns True if a row was updated."""
+    cursor = conn.execute(
+        "UPDATE vocabulary SET chinese = ? WHERE id = ?",
+        (new_chinese, word_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
 def get_weekly_count(conn: sqlite3.Connection) -> int:
     """Count words added in the last 7 days."""
     cursor = conn.execute(

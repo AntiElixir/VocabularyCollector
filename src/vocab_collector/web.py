@@ -62,6 +62,17 @@ def create_app(conn: sqlite3.Connection, templates_dir: Path) -> Flask:
             return jsonify({"ok": True})
         return jsonify({"ok": False, "error": "not found"}), 404
 
+    @app.route("/api/words/<int:word_id>", methods=["PUT"])
+    def update_word(word_id):
+        body = request.get_json(silent=True) or {}
+        new_chinese = (body.get("chinese") or "").strip()
+        if not new_chinese:
+            return jsonify({"ok": False, "error": "chinese is required"}), 400
+        updated = db.update_chinese(conn, word_id, new_chinese)
+        if updated:
+            return jsonify({"ok": True})
+        return jsonify({"ok": False, "error": "not found"}), 404
+
     @app.route("/api/stats")
     def get_stats():
         query = request.args.get("q", "").strip()
