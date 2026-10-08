@@ -11,36 +11,7 @@
 
 ---
 
-## 一、功能与实现文件对照
-
-| 功能                                                | 实现文件                                                                      | 对应测试                                                  | 状态       |
-| ------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------- | -------- |
-| 配置加载与校验（TOML、占位 key 拦截、密钥脱敏）                      | `src/vocab_collector/config.py`                                           | `tests/test_config.py`                                | 完成       |
-| 可移植路径解析（源码与冻结 exe 都指向同级 `config/`、`data/`）        | `src/vocab_collector/paths.py`                                            | `tests/test_paths.py`                                 | 完成       |
-| 轮转日志、`--noconsole` 安全、未捕获异常写入日志                   | `src/vocab_collector/logging_setup.py`                                    | `tests/test_logging_setup.py`                         | 完成       |
-| LLM 结构化调用（`json_schema` 严格模式，被拒时回退 `json_object`） | `src/vocab_collector/llm.py`                                              | `tests/test_llm.py`                                   | 完成       |
-| 模型响应校验（Pydantic v2，三字段非空、禁止多余字段）                  | `src/vocab_collector/models.py`                                           | `tests/test_models.py`                                | 完成       |
-| 剪贴板新鲜度门控、重试读取、选区清洗                                | `src/vocab_collector/clipboard.py`                                        | `tests/test_clipboard.py`                             | 完成       |
-| 全局手势 `Ctrl+C+C`（虚拟键状态机 + pynput 监听）               | `src/vocab_collector/hotkey.py`                                           | `tests/test_hotkey.py`、`tests/test_listener_smoke.py` | 完成       |
-| 单工作线程队列编排、阶段隔离、成功后刷新 HTML                         | `src/vocab_collector/pipeline.py`                                         | `tests/test_pipeline.py`                              | 完成       |
-| SQLite 存储（大小写不敏感去重、倒序查询、FSRS 预留列）                 | `src/vocab_collector/db.py`                                               | `tests/test_db.py`                                    | 完成       |
-| 自包含 HTML 导出（HTML 转义 + 原子写入）                       | `src/vocab_collector/html_export.py`                                      | `tests/test_html_export.py`                           | 完成       |
-| 守护进程入口（无参数、启动即监听）                                 | `src/vocab_collector/__main__.py`                                         | `tests/test_main.py`                                  | 完成       |
-| Web 词库页面（Flask、搜索、分页、删除、编辑、亮/暗主题）             | `src/vocab_collector/web.py`、`src/vocab_collector/templates/index.html`   | 待补充                                                | 完成       |
-| 打包（PyInstaller onedir、无控制台、无 UPX、附带示例配置）          | `packaging/vocab-collector.spec`、`scripts/build.ps1`、`scripts/run_app.py` | `tests/test_build_hygiene.py`                         | 完成       |
-| 构建产物卫生检查（dist 内无真实 key、无真实 config）                | `tests/test_build_hygiene.py`                                             | 自身                                                    | 完成       |
-
-## 二、工作原理（一次捕获的完整链路）
-
-1. `hotkey.Listener` 用 pynput 被动监听键盘，`TapStateMachine` 按**虚拟键码**判断「Ctrl 按住 + C 连按两次」。它只把工作塞进队列，绝不在回调里做慢操作。
-2. 第一次按下 C 时记录 `GetClipboardSequenceNumber()`；触发时交给 `pipeline.Collector`。
-3. `clipboard.wait_for_change()` 等待剪贴板序号变化（有超时）。序号不变就中止，绝不读取可能过期的剪贴板。
-4. `clipboard.read_text()`（对忙锁重试）读出你自己 `Ctrl+C` 已经复制的内容；`clipboard.sanitize()` 去掉首尾/多余空白，拒绝空、多行、超长、无 ASCII 字母的输入。
-5. `llm.LLMClient.collect()` 调 OpenAI 兼容接口，主用 `json_schema` 严格模式，被拒则回退 `json_object`；结果用 `models.VocabResult` 校验。**任何时候失败都只写日志，绝不写库。**
-6. `db.insert_word()` 以大小写不敏感方式去重（`COLLATE NOCASE` + `UNIQUE`），重复词不新增。
-7. 新词入库后，`html_export.write_atomic()` 重新生成 `data/vocabulary.html`（原子替换）。
-
-## 三、快速开始
+## 一、快速开始
 
 ### 方式 A：使用打包好的程序（推荐给最终用户）
 
@@ -60,6 +31,35 @@ uv sync
 Copy-Item config/config.example.toml config/config.toml   # 然后填入你的 key
 uv run python -m vocab_collector
 ```
+
+## 二、功能与实现文件对照
+
+| 功能                                                | 实现文件                                                                      | 对应测试                                                  | 状态       |
+| ------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------- | -------- |
+| 配置加载与校验（TOML、占位 key 拦截、密钥脱敏）                      | `src/vocab_collector/config.py`                                           | `tests/test_config.py`                                | 完成       |
+| 可移植路径解析（源码与冻结 exe 都指向同级 `config/`、`data/`）        | `src/vocab_collector/paths.py`                                            | `tests/test_paths.py`                                 | 完成       |
+| 轮转日志、`--noconsole` 安全、未捕获异常写入日志                   | `src/vocab_collector/logging_setup.py`                                    | `tests/test_logging_setup.py`                         | 完成       |
+| LLM 结构化调用（`json_schema` 严格模式，被拒时回退 `json_object`） | `src/vocab_collector/llm.py`                                              | `tests/test_llm.py`                                   | 完成       |
+| 模型响应校验（Pydantic v2，三字段非空、禁止多余字段）                  | `src/vocab_collector/models.py`                                           | `tests/test_models.py`                                | 完成       |
+| 剪贴板新鲜度门控、重试读取、选区清洗                                | `src/vocab_collector/clipboard.py`                                        | `tests/test_clipboard.py`                             | 完成       |
+| 全局手势 `Ctrl+C+C`（虚拟键状态机 + pynput 监听）               | `src/vocab_collector/hotkey.py`                                           | `tests/test_hotkey.py`、`tests/test_listener_smoke.py` | 完成       |
+| 单工作线程队列编排、阶段隔离、成功后刷新 HTML                         | `src/vocab_collector/pipeline.py`                                         | `tests/test_pipeline.py`                              | 完成       |
+| SQLite 存储（大小写不敏感去重、倒序查询、FSRS 预留列）                 | `src/vocab_collector/db.py`                                               | `tests/test_db.py`                                    | 完成       |
+| 自包含 HTML 导出（HTML 转义 + 原子写入）                       | `src/vocab_collector/html_export.py`                                      | `tests/test_html_export.py`                           | 完成       |
+| 守护进程入口（无参数、启动即监听）                                 | `src/vocab_collector/__main__.py`                                         | `tests/test_main.py`                                  | 完成       |
+| Web 词库页面（Flask、搜索、分页、删除、编辑、亮/暗主题）             | `src/vocab_collector/web.py`、`src/vocab_collector/templates/index.html`   | 待补充                                                | 完成       |
+| 打包（PyInstaller onedir、无控制台、无 UPX、附带示例配置）          | `packaging/vocab-collector.spec`、`scripts/build.ps1`、`scripts/run_app.py` | `tests/test_build_hygiene.py`                         | 完成       |
+| 构建产物卫生检查（dist 内无真实 key、无真实 config）                | `tests/test_build_hygiene.py`                                             | 自身                                                    | 完成       |
+
+## 三、工作原理（一次捕获的完整链路）
+
+1. `hotkey.Listener` 用 pynput 被动监听键盘，`TapStateMachine` 按**虚拟键码**判断「Ctrl 按住 + C 连按两次」。它只把工作塞进队列，绝不在回调里做慢操作。
+2. 第一次按下 C 时记录 `GetClipboardSequenceNumber()`；触发时交给 `pipeline.Collector`。
+3. `clipboard.wait_for_change()` 等待剪贴板序号变化（有超时）。序号不变就中止，绝不读取可能过期的剪贴板。
+4. `clipboard.read_text()`（对忙锁重试）读出你自己 `Ctrl+C` 已经复制的内容；`clipboard.sanitize()` 去掉首尾/多余空白，拒绝空、多行、超长、无 ASCII 字母的输入。
+5. `llm.LLMClient.collect()` 调 OpenAI 兼容接口，主用 `json_schema` 严格模式，被拒则回退 `json_object`；结果用 `models.VocabResult` 校验。**任何时候失败都只写日志，绝不写库。**
+6. `db.insert_word()` 以大小写不敏感方式去重（`COLLATE NOCASE` + `UNIQUE`），重复词不新增。
+7. 新词入库后，`html_export.write_atomic()` 重新生成 `data/vocabulary.html`（原子替换）。
 
 ## 四、配置说明（`config/config.toml`）
 
@@ -88,7 +88,7 @@ uv run python -m vocab_collector
 | `data/vocabulary.html` | 静态单词表页面（备用，Web 服务不可用时可用）   |
 | `data/collector.log`   | 轮转日志（1 MB × 3，UTF-8）        |
 
-## 五.一、Web 词库页面
+## 六、Web 词库页面
 
 程序启动后，会在 `http://127.0.0.1:8765/` 提供 Web 词库服务（端口可在配置文件中修改）。
 
@@ -101,13 +101,21 @@ uv run python -m vocab_collector
 - **主题**：支持亮色/暗色主题切换（自动记住偏好）
 - **释义隐藏**：可隐藏/显示单条或全部释义
 
-## 六、测试
+亮色主题：
+
+![Web 词库页面 - 亮色主题](docs/screenshot-light.png)
+
+暗色主题：
+
+![Web 词库页面 - 暗色主题](docs/screenshot-dark.png)
+
+## 七、测试
 
 ```powershell
 uv run pytest
 ```
 
-## 七、打包构建
+## 八、打包构建
 
 ```powershell
 pwsh scripts/build.ps1
@@ -144,7 +152,7 @@ git push origin v0.1.1
 
 推送 tag 后，GitHub Actions 会自动构建并创建 Release，无需手动操作。
 
-## 八、开发进度记录
+## 九、开发进度记录
 
 用此清单维护项目状态。开始工作前登记待办，实施中标记进行中，完成后补充验证结果。
 
@@ -174,7 +182,7 @@ git push origin v0.1.1
 
 - [ ] FSRS 复习逻辑：数据库已有 `fsrs_*` 预留列，但尚无算法。
 
-## 九、已知限制
+## 十、已知限制
 
 - 以管理员权限运行的程序（UIPI）看不到你的手势。
 - 终端里 `Ctrl+C` 不是复制，因此终端中通常无法触发。
@@ -184,16 +192,19 @@ git push origin v0.1.1
 - 电脑休眠唤醒后若手势失灵，重启程序即可。
 - 若在 `dist/` 里手动放了真实 `config.toml`，`tests/test_build_hygiene.py` 的 dist 检查会失败——这是预期行为，该检查针对的是「刚构建出来、尚未填入密钥」的发布产物。
 
-## 十、明确不做的事
+## 十一、明确不做的事
 
 没有 GUI、托盘、弹窗、通知、发音、例句、复习算法（Anki/FSRS）、统计、云同步或服务器。数据库里为 FSRS 预留了空列，但没有任何复习逻辑。
 
-## 十一、目录结构
+## 十二、目录结构
 
 ```
 VocabularyCollector/
 ├─ config/
 │  └─ config.example.toml      # 示例配置（提交进仓库）
+├─ docs/
+│  ├─ screenshot-light.png     # Web 词库页面 - 亮色主题截图
+│  ─ screenshot-dark.png      # Web 词库页面 - 暗色主题截图
 ├─ packaging/
 │  └─ vocab-collector.spec     # PyInstaller 规格
 ├─ scripts/
