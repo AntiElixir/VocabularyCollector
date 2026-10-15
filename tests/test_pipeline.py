@@ -1,6 +1,6 @@
 import time
 
-from vocab_collector import db, pipeline
+from vocab_collector import db, notifier, pipeline
 from vocab_collector.config import AppConfig
 from vocab_collector.llm import LLMError
 from vocab_collector.models import VocabResult
@@ -12,6 +12,16 @@ class FakeConfig:
         double_tap_window_ms=400,
         clipboard_wait_ms=50,
         log_level="INFO",
+    )
+
+
+class NoNotifyConfig:
+    app = AppConfig(
+        max_selection_chars=64,
+        double_tap_window_ms=400,
+        clipboard_wait_ms=50,
+        log_level="INFO",
+        notify_on_recognize=False,
     )
 
 
@@ -147,3 +157,48 @@ def test_worker_survives_a_stage_exception(tmp_path, monkeypatch):
     rows = db.list_all(conn)
     assert len(rows) == 1
     assert rows[0][0] == "good"
+
+
+def test_notifier_called_on_successful_recognition(tmp_path, monkeypatch):
+    conn = _conn(tmp_path)
+    _clipboard(monkeypatch, text="hello")
+    notified = []
+    monkeypatch.setattr(
+        pipeline.notifier, "notify_word_recognized", lambda w: notified.append(w)
+    )
+    llm = FakeLLM(VocabResult(english="hello", chinese="你好", domain="AI"))
+    collector = pipeline.Collector(FakeConfig(), conn, llm, Paths(tmp_path))
+
+    collector._process(1)
+
+    assert notified == ["hello"]
+
+
+def test_notifier_not_called_when_disabled(tmp_path, monkeypatch):
+    conn = _conn(tmp_path)
+    _clipboard(monkeypatch, text="hello")
+    notified = []
+    monkeypatch.setattr(
+        pipeline.notifier, "notify_word_recognized", lambda w: notified.append(w)
+    )
+    llm = FakeLLM(VocabResult(english="hello", chinese="你好", domain="AI"))
+    collector = pipeline.Collector(NoNotifyConfig(), conn, llm, Paths(tmp_path))
+
+    collector._process(1)
+
+    assert notified == []
+
+
+def test_notifier_not_called_for_invalid_selection(tmp_path, monkeypatch):
+    conn = _conn(tmp_path)
+    _clipboard(monkeypatch, text="1234")
+    notified = []
+    monkeypatch.setattr(
+        pipeline.notifier, "notify_word_recognized", lambda w: notified.append(w)
+    )
+    llm = FakeLLM(VocabResult(english="x", chinese="y", domain="AI"))
+    collector = pipeline.Collector(FakeConfig(), conn, llm, Paths(tmp_path))
+
+    collector._process(1)
+
+    assert notified == []

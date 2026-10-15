@@ -6,11 +6,11 @@
 
 在任意程序里选中一个英文单词，按住 `Ctrl` 连按两次 `C`，它就会调用大模型取回**中文释义**和**学科**，写入本地数据库，并刷新一个可直接用浏览器打开的单词表。
 
-它常驻后台：没有窗口、不弹提示、不托盘、不注册开机启动、不做云同步。整个文件夹是便携的——双击一个 `exe` 即可运行，不需要 Python、Node 或安装器。推荐通过 win+r 输入`shell:startup` 将 `exe` 放入，即可开机自启。
+它常驻后台：没有窗口、不托盘、不注册开机启动、不做云同步。识别到单词时会弹出 Windows 通知（可关闭）。整个文件夹是便携的——双击一个 `exe` 即可运行，不需要 Python、Node 或安装器。推荐通过 win+r 输入`shell:startup` 将 `exe` 放入，即可开机自启。
 
 - 平台：Windows
 - 语言：Python >= 3.11
-- 运行依赖：`pynput`、`pyperclip`、`openai`、`pydantic`
+- 运行依赖：`pynput`、`pyperclip`、`openai`、`pydantic`、`windows-toasts`
 - 当前版本：`0.1.0`（源码 `src/vocab_collector`）
 
 ---
@@ -48,6 +48,7 @@ uv run python -m vocab_collector
 | 剪贴板新鲜度门控、重试读取、选区清洗                                | `src/vocab_collector/clipboard.py`                                        | `tests/test_clipboard.py`                             | 完成       |
 | 全局手势 `Ctrl+C+C`（虚拟键状态机 + pynput 监听）               | `src/vocab_collector/hotkey.py`                                           | `tests/test_hotkey.py`、`tests/test_listener_smoke.py` | 完成       |
 | 单工作线程队列编排、阶段隔离、成功后刷新 HTML                         | `src/vocab_collector/pipeline.py`                                         | `tests/test_pipeline.py`                              | 完成       |
+| Windows 通知（识别到单词后弹出 toast，可配置关闭）                  | `src/vocab_collector/notifier.py`                                         | `tests/test_notifier.py`                              | 完成       |
 | SQLite 存储（大小写不敏感去重、倒序查询、FSRS 预留列）                 | `src/vocab_collector/db.py`                                               | `tests/test_db.py`                                    | 完成       |
 | 自包含 HTML 导出（HTML 转义 + 原子写入）                       | `src/vocab_collector/html_export.py`                                      | `tests/test_html_export.py`                           | 完成       |
 | 守护进程入口（无参数、启动即监听）                                 | `src/vocab_collector/__main__.py`                                         | `tests/test_main.py`                                  | 完成       |
@@ -61,9 +62,10 @@ uv run python -m vocab_collector
 2. 第一次按下 C 时记录 `GetClipboardSequenceNumber()`；触发时交给 `pipeline.Collector`。
 3. `clipboard.wait_for_change()` 等待剪贴板序号变化（有超时）。序号不变就中止，绝不读取可能过期的剪贴板。
 4. `clipboard.read_text()`（对忙锁重试）读出你自己 `Ctrl+C` 已经复制的内容；`clipboard.sanitize()` 去掉首尾/多余空白，拒绝空、多行、超长、无 ASCII 字母的输入。
-5. `llm.LLMClient.collect()` 调 OpenAI 兼容接口，主用 `json_schema` 严格模式，被拒则回退 `json_object`；结果用 `models.VocabResult` 校验。**任何时候失败都只写日志，绝不写库。**
-6. `db.insert_word()` 以大小写不敏感方式去重（`COLLATE NOCASE` + `UNIQUE`），重复词不新增。
-7. 新词入库后，`html_export.write_atomic()` 重新生成 `data/vocabulary.html`（原子替换）。
+5. 识别成功后，`notifier.notify_word_recognized()` 弹出一条 Windows toast 通知（可在配置中关闭）。
+6. `llm.LLMClient.collect()` 调 OpenAI 兼容接口，主用 `json_schema` 严格模式，被拒则回退 `json_object`；结果用 `models.VocabResult` 校验。**任何时候失败都只写日志，绝不写库。**
+7. `db.insert_word()` 以大小写不敏感方式去重（`COLLATE NOCASE` + `UNIQUE`），重复词不新增。
+8. 新词入库后，`html_export.write_atomic()` 重新生成 `data/vocabulary.html`（原子替换）。
 
 ## 四、配置说明（`config/config.toml`）
 
@@ -79,6 +81,7 @@ uv run python -m vocab_collector
 | `app.double_tap_window_ms` | `400`                               | 两次 C 之间允许的最大间隔     |
 | `app.clipboard_wait_ms`    | `800`                               | 等待剪贴板更新的最长时间       |
 | `app.log_level`            | `INFO`                              | 日志级别               |
+| `app.notify_on_recognize`  | `true`                              | 识别到单词后是否弹出 Windows 通知 |
 | `web.host`                 | `127.0.0.1`                         | Web 服务监听地址          |
 | `web.port`                 | `8765`                              | Web 服务端口             |
 
@@ -171,6 +174,7 @@ git push origin v0.1.1
 - [x] 删除端到端测试：移除不稳定的 `windows_e2e` 测试（`test_e2e_capture`、`test_e2e_failures`、`test_listener_smoke`）。
 - [x] GitHub Actions CI：每次 push 或 PR 自动运行测试。
 - [x] GitHub Actions Release：推送 `v*` tag 时自动构建 exe 并上传到 GitHub Release。
+- [x] Windows 通知：识别到单词后弹出 toast 通知（调用 LLM 前），可通过 `app.notify_on_recognize` 关闭。
 
 ### 进行中
 
@@ -190,7 +194,7 @@ git push origin v0.1.1
 
 ## 十一、明确不做的事
 
-没有 GUI、托盘、弹窗、通知、发音、例句、复习算法（Anki/FSRS）、统计、云同步或服务器。数据库里为 FSRS 预留了空列，但没有任何复习逻辑。
+没有 GUI、托盘、发音、例句、复习算法（Anki/FSRS）、统计、云同步或服务器。数据库里为 FSRS 预留了空列，但没有任何复习逻辑。
 
 ## 十二、目录结构
 
@@ -209,7 +213,7 @@ VocabularyCollector/
 ├─ src/vocab_collector/        # 应用源码
 │  ├─ __main__.py              # 守护进程入口
 │  ├─ paths.py  config.py  logging_setup.py
-│  ├─ clipboard.py  hotkey.py  pipeline.py
+│  ├─ clipboard.py  hotkey.py  pipeline.py  notifier.py
 │  ├─ llm.py  models.py  db.py  html_export.py
 │  ├─ web.py                   # Flask Web 服务
 │  ├─ templates/

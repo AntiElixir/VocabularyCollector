@@ -7,7 +7,7 @@ import queue
 import threading
 from datetime import datetime, timezone
 
-from . import clipboard, db, html_export
+from . import clipboard, db, html_export, notifier
 from .llm import LLMError
 
 _LOG = logging.getLogger(__name__)
@@ -77,6 +77,9 @@ class Collector:
         if word is None:
             _LOG.warning("rejected invalid selection")
             return
+
+        if self._config.app.notify_on_recognize:
+            notifier.notify_word_recognized(word)
 
         try:
             result = self._llm.collect(word)

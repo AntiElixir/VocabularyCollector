@@ -29,6 +29,7 @@ class AppConfig:
     double_tap_window_ms: int = 400
     clipboard_wait_ms: int = 800
     log_level: str = "INFO"
+    notify_on_recognize: bool = True
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,7 @@ class Config:
             f"double_tap_window_ms={self.app.double_tap_window_ms} "
             f"clipboard_wait_ms={self.app.clipboard_wait_ms} "
             f"log_level={self.app.log_level} "
+            f"notify_on_recognize={self.app.notify_on_recognize} "
             f"web_host={self.web.host} web_port={self.web.port}"
         )
 
@@ -110,6 +112,7 @@ def load_config(path: Path | str) -> Config:
             double_tap_window_ms=int(app_raw.get("double_tap_window_ms", 400)),
             clipboard_wait_ms=int(app_raw.get("clipboard_wait_ms", 800)),
             log_level=str(app_raw.get("log_level", "INFO")),
+            notify_on_recognize=bool(app_raw.get("notify_on_recognize", True)),
         )
     except (TypeError, ValueError) as exc:
         raise ConfigError(f"Invalid value in [app]: {exc}") from exc

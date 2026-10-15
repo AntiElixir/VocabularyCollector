@@ -17,6 +17,9 @@ max_selection_chars = 64
 double_tap_window_ms = 400
 clipboard_wait_ms = 800
 log_level = "INFO"
+# Show a Windows toast notification when a word is successfully recognised
+# (before the LLM is called). Set to false to disable.
+notify_on_recognize = true
 
 [web]
 host = "127.0.0.1"
